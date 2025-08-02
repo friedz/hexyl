@@ -43,6 +43,10 @@ pub enum CharacterTable {
     /// Uses code page 437 (for non-ASCII bytes).
     #[value(name = "codepage-437")]
     CP437,
+
+    /// Uses Control Pictures (U+2400 - U+243F) for non printable ASCII bytes.
+    #[value(name = "control-pictures")]
+    ControlPictures,
 }
 
 #[derive(Copy, Clone, Debug, Default, ValueEnum)]
@@ -113,6 +117,14 @@ impl Byte {
             },
             CharacterTable::CP1047 => CP1047[self.0 as usize],
             CharacterTable::CP437 => CP437[self.0 as usize],
+            CharacterTable::ControlPictures => match self.category() {
+                Null => '⋄',
+                AsciiPrintable => self.0 as char,
+                AsciiWhitespace if self.0 == 0x20 => ' ',
+                AsciiWhitespace | AsciiOther => CONTROL_PICTURES[self.0 as usize],
+                NonAscii if self.0 == 0xFF => 'ﬀ',
+                NonAscii => '×',
+            }
         }
     }
 }
